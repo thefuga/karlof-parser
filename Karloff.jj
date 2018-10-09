@@ -1,0 +1,165 @@
+PARSER_BEGIN(Karloff)
+import java.io.*;
+public class Karloff {
+
+  public static void main(String args[]) throws ParseException,IOException {
+    
+    Karloff parser = new Karloff(new FileInputStream(args[0]));
+    parser.Karloff();
+  }
+
+}
+
+PARSER_END(Karloff)
+
+SKIP :
+{
+  " "
+| "\t"
+| "\n"
+| "\r"
+}
+
+TOKEN :
+{
+  <MAIN: "main">
+| <ACHAVES: "{">
+| <FCHAVES: "}">
+| <VOID: "void">
+| <VAR:"newVar">
+| <SEMICOLON:";">
+| <TYPE:("int" | "bool")>
+| <ATTR:"=">
+| <OPENPAR:"(">
+| <CLOSEPAR:")">
+| <COMMA:",">
+| <TRUE:"true">
+| <FALSE:"false">
+| <IF: "if">
+| <UNTIL:"until">
+| <REPEAT:"repeat">
+| <RETURN:"return">
+| <SYSOUTPUT:"System.output">
+| <FUNC:"func">
+| <TOKEN_ID: ["a"-"z","A"-"Z"] ( ["a"-"z","A"-"Z","0"-"9"])* ("_")*>
+| <TOKEN_NUM_LITERAL:(["0"-"9"])+ ("."(["0"-"9"])+ )? ("E" ("+" | "-")? (["0"-"9"])+)?>
+}
+
+
+TOKEN :
+{
+ <OP: ("+" | "-" | "*" | "/" | "&" | "|" | "<" | ">" | "==")>
+|< ID: ["a"-"z","A"-"Z"] ( ["a"-"z","A"-"Z","0"-"9"])*>
+
+}
+
+
+void Karloff () :
+{}
+{ 
+  Main() (Func())?  <EOF> 
+}
+
+
+void Func():
+{}
+{
+  (<FUNC> Type() <TOKEN_ID> <OPENPAR> (ArgsList())? <CLOSEPAR> <ACHAVES> VarDeclaration() CommandsSequence() <FCHAVES>)+
+}
+
+
+void ArgsList():
+{}
+{
+  Type() <TOKEN_ID> (<SEMICOLON> ArgsList())?
+}
+
+
+void Main ():
+{}
+{
+ <VOID> <MAIN> <ACHAVES> VarDeclaration() CommandsSequence() <FCHAVES>
+}
+
+
+void VarDeclaration():
+{}
+{
+  (<VAR> Type() <TOKEN_ID> <SEMICOLON>)*
+}
+
+
+void Type():
+{}
+{
+  <TYPE>
+}
+
+
+void CommandsSequence():
+{}
+{
+  (Command_A())*
+}
+
+
+void Command_A():
+{}
+{
+  (<TOKEN_ID> Command_B()) 
+  |(<IF> <OPENPAR> Exp() <CLOSEPAR> <ACHAVES> CommandsSequence() <FCHAVES> <SEMICOLON>)
+  |(<UNTIL> <OPENPAR> Exp() <CLOSEPAR> <REPEAT> <ACHAVES> CommandsSequence() <FCHAVES> <SEMICOLON>)
+  |(<REPEAT> <ACHAVES> CommandsSequence() <FCHAVES> <UNTIL> <OPENPAR> Exp() <CLOSEPAR> <SEMICOLON>)
+  |(<RETURN> Exp() <SEMICOLON>)
+  |(<SYSOUTPUT> <OPENPAR> Exp() <CLOSEPAR> <SEMICOLON>)
+
+}
+
+
+//Eliminate grammar reccursion
+void Command_B():
+{}
+{
+  (<ATTR> Exp() <SEMICOLON>) 
+  |(<OPENPAR> ExpList_A() <CLOSEPAR> <SEMICOLON>)
+}
+
+
+void Exp():
+{}
+{
+  (<OPENPAR> Exp() <OP> Exp() <CLOSEPAR>)
+  | Factor_A()
+}
+
+
+void ExpList_A():
+{}
+{
+  Exp() ExpList_B()
+}
+
+
+//Eliminate ExpList_A reccursion
+void ExpList_B():
+{}
+{
+  (<COMMA> Exp() ExpList_B())?
+}
+
+
+void Factor_A():
+{}
+{
+  (<TOKEN_ID> Factor_B()) 
+  | <TOKEN_NUM_LITERAL> 
+  | <TRUE> 
+  | <FALSE>
+}
+
+
+void Factor_B():
+{}
+{
+  (<OPENPAR> (ExpList_A())? <CLOSEPAR>)?
+}

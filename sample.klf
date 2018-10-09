@@ -1,0 +1,14 @@
+void main{
+    newVar int a;
+    newVar bool b;
+    print(a);
+    if (((a / b) < 0)){
+        repeat{ 
+            return false;
+        }until (true);
+    }; 
+}
+
+func int sampleFunc(int a){
+    return a;
+}
